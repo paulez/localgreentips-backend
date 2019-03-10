@@ -1,3 +1,13 @@
-from django.shortcuts import render
+from rest_framework import viewsets
 
-# Create your views here.
+from .models import Tip, Tipper
+from .serializers import TipSerializer, TipperSerializer
+
+
+class TipViewSet(viewsets.ModelViewSet):
+    queryset = Tip.objects.all().order_by('-score')
+    serializer_class = TipSerializer
+
+class TipperViewSet(viewsets.ModelViewSet):
+    queryset = Tipper.objects.all()
+    serializer_class = TipperSerializer
