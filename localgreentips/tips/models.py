@@ -16,9 +16,9 @@ class Tip(models.Model):
             null=True,
     )
 
-    cities = models.ManyToManyField(City)
-    regions = models.ManyToManyField(Region)
-    countries = models.ManyToManyField(Country)
+    cities = models.ManyToManyField(City, blank=True)
+    regions = models.ManyToManyField(Region, blank=True)
+    countries = models.ManyToManyField(Country, blank=True)
 
 
 class Comment(models.Model):
