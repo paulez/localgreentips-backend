@@ -28,6 +28,4 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('admin/', admin.site.urls),
-    #path('cities_light/api/', include('cities_light.contrib.restframework3')),
-    url(r'^cities_light/api/', include('cities_light.contrib.restframework3')),
 ]
