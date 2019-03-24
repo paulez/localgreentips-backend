@@ -5,6 +5,9 @@ from cities.models import Country, Region, City
 class Tipper(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.user.username
+
 class Tip(models.Model):
     title = models.CharField(max_length=100)
     text = models.TextField()
