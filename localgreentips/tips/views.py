@@ -50,7 +50,7 @@ class TipViewSet(viewsets.ModelViewSet):
                     default=F('score'),
                     output_field=IntegerField()))
 
-            return queryset.order_by('-boost_score')
+            return queryset.order_by('-boost_score').prefetch_related('cities', 'regions', 'countries')
         else:
             return queryset.order_by('-score')
 
