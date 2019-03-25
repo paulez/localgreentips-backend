@@ -5,7 +5,7 @@ from cities.models import Country, Region, City
 from .models import Tip, Tipper, Comment
 
 
-class TipSerializer(serializers.HyperlinkedModelSerializer):
+class TipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tip

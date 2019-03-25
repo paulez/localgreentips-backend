@@ -23,6 +23,9 @@ class Tip(models.Model):
     regions = models.ManyToManyField(Region, blank=True)
     countries = models.ManyToManyField(Country, blank=True)
 
+    def __str__(self):
+        return "{} by {}".format(self.title, self.user)
+
 
 class Comment(models.Model):
     text = models.TextField()
