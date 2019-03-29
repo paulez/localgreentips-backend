@@ -13,7 +13,7 @@ class Tip(models.Model):
     text = models.TextField()
     score = models.IntegerField()
 
-    user = models.ForeignKey(
+    tipper = models.ForeignKey(
             Tipper,
             on_delete=models.SET_NULL,
             null=True,
