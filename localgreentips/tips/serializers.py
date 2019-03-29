@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from cities.models import Country, Region, City
@@ -22,15 +23,30 @@ class CountrySerializer(serializers.ModelSerializer):
         model = Country
         fields = ('name',)
 
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username',)
+
+class TipperSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer(required=True)
+
+    class Meta:
+        model = Tipper
+        fields = ('user',)
+
 class TipSerializer(serializers.ModelSerializer):
     
-    cities = CitySerializer(many=True, required=False)
-    regions = RegionSerializer(many=True, required=False)
-    countries = CountrySerializer(many=True, required=False)
+    cities = serializers.StringRelatedField(many=True, required=False)
+    regions = serializers.StringRelatedField(many=True, required=False)
+    countries = serializers.StringRelatedField(many=True, required=False)
+    tipper = serializers.StringRelatedField()
 
     class Meta:
         model = Tip
-        fields = ('title', 'user', 'text', 'score', 'cities', 'regions', 'countries')
+        fields = ('title', 'tipper', 'text', 'score', 'cities', 'regions', 'countries')
 
 class TipperSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
