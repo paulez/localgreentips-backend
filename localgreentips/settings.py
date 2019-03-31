@@ -152,3 +152,4 @@ REST_FRAMEWORK = {
 
 # Don't import postal codes
 CITIES_POSTAL_CODES = []
+CITIES_LOCALES = ['ALL']
