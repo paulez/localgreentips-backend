@@ -35,6 +35,25 @@ class CountrySerializer(serializers.ModelSerializer):
         model = Country
         fields = ('id', 'name',)
 
+class RegionNestedSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField()
+    country = CountrySerializer()
+
+    class Meta:
+        model = Region
+        fields = ('id', 'name', 'country')
+
+class CityNestedSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField()
+    region = RegionNestedSerializer()
+
+    class Meta:
+        model = City
+        fields = ('id', 'name', 'region')
+
+
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:

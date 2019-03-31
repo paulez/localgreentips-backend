@@ -4,9 +4,13 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from cities.models import City
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Tip, Tipper
 from .serializers import TipSerializer, TipperSerializer
+from .serializers import CityNestedSerializer
 
 
 class TipViewSet(viewsets.ModelViewSet):
@@ -58,3 +62,20 @@ class TipViewSet(viewsets.ModelViewSet):
 class TipperViewSet(viewsets.ModelViewSet):
     queryset = Tipper.objects.all()
     serializer_class = TipperSerializer
+
+class CityViewSet(viewsets.ModelViewSet):
+    serializer_class = CityNestedSerializer
+    queryset = City.objects.all()
+
+    def get_queryset(self):
+        longitude = self.request.query_params.get('longitude', None)
+        latitude= self.request.query_params.get('latitude', None)
+        cities = City.objects.all()
+        if longitude and latitude:
+            location = Point(float(longitude), float(latitude))
+            cities = City.objects.filter(
+                    location__distance_lte=(location, D(km=100))).annotate(
+                            distance=Distance('location', location))
+            cities = cities.order_by('distance')
+        return cities
+
