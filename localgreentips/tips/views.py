@@ -3,7 +3,7 @@ from django.db.models import IntegerField, Case, F, Value, When
 from django.contrib.gis.geos import Point 
 from django.contrib.gis.measure import D
 from cities.models import City
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,6 +16,7 @@ from .serializers import CityNestedSerializer
 class TipViewSet(viewsets.ModelViewSet):
     queryset = Tip.objects.all().order_by('-score')
     serializer_class = TipSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         longitude = self.request.query_params.get('longitude', None)
