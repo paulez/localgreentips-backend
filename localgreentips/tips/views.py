@@ -8,8 +8,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Tip, Tipper
-from .serializers import TipSerializer, TipperSerializer
+from .models import Tip
+from .serializers import TipSerializer
 from .serializers import CityNestedSerializer
 
 
@@ -58,10 +58,6 @@ class TipViewSet(viewsets.ModelViewSet):
         else:
             return queryset.order_by('-score')
 
-
-class TipperViewSet(viewsets.ModelViewSet):
-    queryset = Tipper.objects.all()
-    serializer_class = TipperSerializer
 
 class CityViewSet(viewsets.ModelViewSet):
     serializer_class = CityNestedSerializer

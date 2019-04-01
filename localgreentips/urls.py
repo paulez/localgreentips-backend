@@ -22,7 +22,6 @@ from localgreentips.tips import views
 
 router = routers.DefaultRouter()
 router.register(r'tips', views.TipViewSet)
-router.register(r'tippers', views.TipperViewSet)
 router.register(r'cities', views.CityViewSet)
 
 urlpatterns = [

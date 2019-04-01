@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from cities.models import Country, Region, City
 
-from .models import Tip, Tipper, Comment
+from .models import Tip, Comment
 
 logger = logging.getLogger(__name__)
 
@@ -65,20 +65,12 @@ class UserSerializer(serializers.ModelSerializer):
             }
         }
 
-class TipperSerializer(serializers.ModelSerializer):
-
-    user = UserSerializer(required=True)
-
-    class Meta:
-        model = Tipper
-        fields = ('user',)
-
 class TipSerializer(serializers.ModelSerializer):
     
     cities = CitySerializer(many=True, required=False)
     regions = RegionSerializer(many=True, required=False)
     countries = CountrySerializer(many=True, required=False)
-    tipper = TipperSerializer(required=True)
+    tipper = UserSerializer(required=True)
 
     class Meta:
         model = Tip
@@ -104,21 +96,16 @@ class TipSerializer(serializers.ModelSerializer):
         regions = get_related(Region, "regions")
         countries = get_related(Country, "countries")
         
-        tipper_username = validated_data.pop("tipper")["user"]["username"]
+        tipper_username = validated_data.pop("tipper")["username"]
         logger.debug("Retrieving tipper: %s", tipper_username)
-        tipper = Tipper.objects.get(user__username=tipper_username)
+        tipper = User.objects.get(username=tipper_username)
 
         tip = Tip.objects.create(tipper=tipper, **validated_data)
+        
+        tip = Tip.objects.create(**validated_data)
 
         tip.cities.set(cities)
         tip.regions.set(regions)
         tip.countries.set(countries)
 
         return tip
-
-
-class TipperSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Tipper
-        fields = ('user',)
-

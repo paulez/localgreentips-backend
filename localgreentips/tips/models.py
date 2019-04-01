@@ -2,21 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 from cities.models import Country, Region, City
 
-class Tipper(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.user.username
-
 class Tip(models.Model):
     title = models.CharField(max_length=100)
     text = models.TextField()
     score = models.IntegerField()
-
     tipper = models.ForeignKey(
-            Tipper,
+            'auth.User',
+            related_name='snippets',
             on_delete=models.SET_NULL,
-            null=True,
+            null=True
     )
 
     cities = models.ManyToManyField(City, blank=True)
@@ -30,7 +24,7 @@ class Tip(models.Model):
 class Comment(models.Model):
     text = models.TextField()
     user = models.ForeignKey(
-            Tipper,
-            on_delete=models.SET_NULL,
+            'auth.User',
+            on_delete=models.CASCADE,
             null=True,
     )
