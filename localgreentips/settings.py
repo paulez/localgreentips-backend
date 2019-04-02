@@ -41,6 +41,12 @@ INSTALLED_APPS = [
     'cities',
     'localgreentips.tips',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
 ]
 
 MIDDLEWARE = [
@@ -144,6 +150,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# Redirect after login
+LOGIN_REDIRECT_URL = '/'
+
+SITE_ID = 1
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
