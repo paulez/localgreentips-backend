@@ -163,3 +163,6 @@ REST_FRAMEWORK = {
 # Don't import postal codes
 CITIES_POSTAL_CODES = []
 CITIES_LOCALES = ['ALL']
+
+# Email, use sendmail
+EMAIL_BACKEND = 'django_sendmail_backend.backends.EmailBackend'
