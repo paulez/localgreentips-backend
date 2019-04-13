@@ -47,9 +47,11 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'rest_auth.registration',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -166,3 +168,8 @@ CITIES_LOCALES = ['ALL']
 
 # Email, use sendmail
 EMAIL_BACKEND = 'django_sendmail_backend.backends.EmailBackend'
+
+# CORS configuration
+# CORS
+CORS_ORIGIN_WHITELIST = config('CORS_HOSTS', cast=Csv())
+CORS_ALLOW_CREDENTIALS = True
