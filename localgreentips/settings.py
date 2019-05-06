@@ -41,13 +41,13 @@ INSTALLED_APPS = [
     'cities',
     'localgreentips.tips',
     'rest_framework',
+    'corsheaders',
     'rest_framework.authtoken',
     'rest_auth',
     'django.contrib.sites',
     'allauth',
     'allauth.account',
     'rest_auth.registration',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -171,5 +171,5 @@ EMAIL_BACKEND = 'django_sendmail_backend.backends.EmailBackend'
 
 # CORS configuration
 # CORS
-CORS_ORIGIN_WHITELIST = config('CORS_HOSTS', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = config('CORS_HOSTS', cast=Csv())
