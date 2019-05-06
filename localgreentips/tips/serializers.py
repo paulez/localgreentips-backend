@@ -74,7 +74,7 @@ class TipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tip
-        fields = ('title', 'tipper', 'text', 'score', 'cities', 'regions', 'countries')
+        fields = ('id', 'title', 'tipper', 'text', 'score', 'cities', 'regions', 'countries')
 
     def create(self, validated_data):
         logger.debug("Creating tip. Validated data: %s", validated_data)
