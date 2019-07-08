@@ -7,10 +7,10 @@ class Tip(models.Model):
     text = models.TextField()
     score = models.IntegerField()
     tipper = models.ForeignKey(
-            'auth.User',
-            related_name='snippets',
-            on_delete=models.SET_NULL,
-            null=True
+        'auth.User',
+        related_name='snippets',
+        on_delete=models.SET_NULL,
+        null=True,
     )
 
     cities = models.ManyToManyField(City, blank=True)

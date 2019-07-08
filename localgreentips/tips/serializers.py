@@ -70,7 +70,8 @@ class TipSerializer(serializers.ModelSerializer):
     cities = CitySerializer(many=True, required=False)
     regions = RegionSerializer(many=True, required=False)
     countries = CountrySerializer(many=True, required=False)
-    tipper = UserSerializer(required=True)
+    tipper = UserSerializer(required=False, read_only=True)
+    score = serializers.FloatField(required=False, read_only=True)
 
     class Meta:
         model = Tip
@@ -80,8 +81,10 @@ class TipSerializer(serializers.ModelSerializer):
         logger.debug("Creating tip. Validated data: %s", validated_data)
         
         def get_related(model, name):
-
-            data = validated_data.pop(name)
+            try:
+                data = validated_data.pop(name)
+            except KeyError:
+                data = []
             related = []
 
             for item in data:
@@ -96,14 +99,17 @@ class TipSerializer(serializers.ModelSerializer):
         regions = get_related(Region, "regions")
         countries = get_related(Country, "countries")
         
-        tipper_username = validated_data.pop("tipper")["username"]
+        tipper_username = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            tipper_username = request.user
         logger.debug("Retrieving tipper: %s", tipper_username)
         tipper = User.objects.get(username=tipper_username)
 
-        tip = Tip.objects.create(tipper=tipper, **validated_data)
+        tip = Tip.objects.create(tipper=tipper,
+                                 score=0.0,
+                                 **validated_data)
         
-        tip = Tip.objects.create(**validated_data)
-
         tip.cities.set(cities)
         tip.regions.set(regions)
         tip.countries.set(countries)
