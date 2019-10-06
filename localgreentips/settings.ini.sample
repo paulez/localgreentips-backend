@@ -1,0 +1,9 @@
+[settings]
+DEBUG=True
+LOG_LEVEL=DEBUG
+DB_NAME=localgreentips
+DB_USER=localgreentips
+DB_PASSWORD=changeme
+DB_HOST=localhost
+ALLOWED_HOSTS=localhost
+CORS_HOSTS=localhost:3000
