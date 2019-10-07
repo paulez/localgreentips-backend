@@ -163,6 +163,12 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
+# Fix CSRF on HTTPS
+DEFAULT_CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS',
+                              default="",
+                              cast=Csv())
+
 # Don't import postal codes
 CITIES_POSTAL_CODES = []
 CITIES_LOCALES = ['ALL']
