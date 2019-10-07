@@ -168,6 +168,7 @@ DEFAULT_CSRF_TRUSTED_ORIGINS = []
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS',
                               default="",
                               cast=Csv())
+CSRF_COOKIE_DOMAIN = config('CSRF_COOKIE_DOMAIN', default=None)
 
 # Don't import postal codes
 CITIES_POSTAL_CODES = []
