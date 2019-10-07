@@ -18,7 +18,7 @@ class Tip(models.Model):
     countries = models.ManyToManyField(Country, blank=True)
 
     def __str__(self):
-        return "{} by {}".format(self.title, self.user)
+        return "{} by {}".format(self.title, self.tipper)
 
 
 class Comment(models.Model):
