@@ -17,7 +17,6 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf.urls import url
 from rest_framework import routers
-import rest_auth.urls
 
 from localgreentips.tips import views
 
@@ -27,7 +26,7 @@ router.register(r'cities', views.CityViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    url(r'^rest-auth/', include('rest_auth.urls')),
-    url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
+    url(r'^auth/', include('djoser.urls')),
+    url(r'^auth/', include('djoser.urls.authtoken')),
     path('admin/', admin.site.urls),
 ]
