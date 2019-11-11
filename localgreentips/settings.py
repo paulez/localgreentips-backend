@@ -179,3 +179,5 @@ CORS_ORIGIN_WHITELIST = config('CORS_HOSTS', cast=Csv())
 DJOSER = {
     "SEND_CONFIRMATION_EMAIL": True,
 }
+SITE_NAME = "Local Green Tips"
+DOMAIN = "localgreentips.com"
