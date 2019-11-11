@@ -8,10 +8,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+import logging
+
 from .models import Tip
 from .serializers import TipSerializer
 from .serializers import CityNestedSerializer
 
+logger = logging.getLogger(__name__)
 
 class TipViewSet(viewsets.ModelViewSet):
     queryset = Tip.objects.all().order_by('-score')
@@ -33,13 +36,15 @@ class TipViewSet(viewsets.ModelViewSet):
         else:
             location = Point(float(longitude), float(latitude))
             close_cities = City.objects.filter(
-                    location__distance_lte=(location, D(km=10))).annotate(
+                    location__distance_lte=(location, D(km=50))).annotate(
                             distance=Distance('location', location))
 
-            closest_city = close_cities.order_by('distance')[:1][0]
-
+            close_cities = close_cities.order_by('distance')[:10]
+            closest_city = close_cities.first()
+            logger.debug("Looking tips in nearby cities %s", close_cities)
+            logger.debug("Closest city is %s", closest_city)
             local_tips = Tip.objects.filter(
-                    cities=closest_city,
+                    cities__in=close_cities,
                     regions=closest_city.region,
                     countries=closest_city.region.country
                     )
