@@ -1,5 +1,5 @@
 from django.contrib.gis.db.models.functions import Distance
-from django.db.models import IntegerField, Case, F, Value, When
+from django.db.models import IntegerField, Case, F, Value, When, Q
 from django.contrib.gis.geos import Point 
 from django.contrib.gis.measure import D
 from cities.models import City
@@ -26,9 +26,10 @@ class TipViewSet(viewsets.ModelViewSet):
         latitude= self.request.query_params.get('latitude', None)
 
         global_tips = Tip.objects.filter(
-                cities=None,
-                regions=None,
-                countries=None)
+            Q(cities=None) &
+            Q(regions=None) &
+            Q(countries=None)
+        )
 
         if not (longitude and latitude):
             queryset = global_tips
@@ -43,11 +44,14 @@ class TipViewSet(viewsets.ModelViewSet):
             closest_city = close_cities.first()
             logger.debug("Looking tips in nearby cities %s", close_cities)
             logger.debug("Closest city is %s", closest_city)
+            close_cities_filter = Q()
+            for city in close_cities:
+                close_cities_filter |= Q(cities=city)
             local_tips = Tip.objects.filter(
-                    cities__in=close_cities,
-                    regions=closest_city.region,
-                    countries=closest_city.region.country
-                    )
+                    close_cities_filter |
+                    Q(regions=closest_city.region) |
+                    Q(countries=closest_city.region.country)
+            )
 
             queryset = local_tips | global_tips
 
@@ -55,6 +59,7 @@ class TipViewSet(viewsets.ModelViewSet):
             queryset = queryset.annotate(
                 boost_score=Case(
                     When(cities=closest_city, then=F('score') * 1000),
+                    When(close_cities_filter, then=F('score') * 200),
                     When(regions=closest_city.region, then=F('score') * 100),
                     When(countries=closest_city.region.country, then=F('score') * 10),
                     default=F('score'),
