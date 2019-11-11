@@ -173,3 +173,9 @@ EMAIL_BACKEND = 'django_sendmail_backend.backends.EmailBackend'
 # CORS
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = config('CORS_HOSTS', cast=Csv())
+
+# Djoser configuration
+# See https://djoser.readthedocs.io/en/latest/settings.html
+DJOSER = {
+    "SEND_CONFIRMATION_EMAIL": True,
+}
