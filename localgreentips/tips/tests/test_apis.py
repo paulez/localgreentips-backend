@@ -110,8 +110,8 @@ class TipAuthenticatedTests(APITestCase):
                 }],
             "countries": [
                 {
-                    "id": test_city["region"]["country"]["id"],
-                    "name": test_city["region"]["country"]["name"],
+                    "id": test_city["country"]["id"],
+                    "name": test_city["country"]["name"],
                 }],
             }
         response = self.client.post(tips_url, tip_data, format="json")

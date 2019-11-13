@@ -30,7 +30,7 @@ class RegionSerializer(serializers.ModelSerializer):
 class SubregionSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
 
-    class meta:
+    class Meta:
         model = Subregion
         fields = ('id', 'name',)
 
@@ -63,11 +63,13 @@ class SubregionNestedSerializer(serializers.ModelSerializer):
 class CityNestedSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField()
-    subregion = SubregionNestedSerializer()
+    subregion = SubregionSerializer()
+    region = RegionSerializer()
+    country = CountrySerializer()
 
     class Meta:
         model = City
-        fields = ('id', 'name', 'subregion')
+        fields = ('id', 'name', 'subregion', 'region', 'country')
 
 
 class UserSerializer(serializers.ModelSerializer):
