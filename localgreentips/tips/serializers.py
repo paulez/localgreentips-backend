@@ -5,7 +5,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from cities.models import Country, Region, City
+from cities.models import Country, Region, Subregion, City
 
 from .models import Tip, Comment
 
@@ -22,9 +22,16 @@ class CitySerializer(serializers.ModelSerializer):
 class RegionSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField()
-    
+
     class Meta:
         model = Region
+        fields = ('id', 'name',)
+
+class SubregionSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
+
+    class meta:
+        model = Subregion
         fields = ('id', 'name',)
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -44,14 +51,23 @@ class RegionNestedSerializer(serializers.ModelSerializer):
         model = Region
         fields = ('id', 'name', 'country')
 
-class CityNestedSerializer(serializers.ModelSerializer):
+class SubregionNestedSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField()
     region = RegionNestedSerializer()
 
     class Meta:
-        model = City
+        model = Subregion
         fields = ('id', 'name', 'region')
+
+class CityNestedSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField()
+    subregion = SubregionNestedSerializer()
+
+    class Meta:
+        model = City
+        fields = ('id', 'name', 'subregion')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -66,20 +82,22 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 class TipSerializer(serializers.ModelSerializer):
-    
+
     cities = CitySerializer(many=True, required=False)
     regions = RegionSerializer(many=True, required=False)
+    subregions = SubregionSerializer(many=True, required=False)
     countries = CountrySerializer(many=True, required=False)
     tipper = UserSerializer(required=False, read_only=True)
     score = serializers.FloatField(required=False, read_only=True)
 
     class Meta:
         model = Tip
-        fields = ('id', 'title', 'tipper', 'text', 'score', 'cities', 'regions', 'countries')
+        fields = ('id', 'title', 'tipper', 'text',
+                  'score', 'cities', 'regions', 'subregions', 'countries')
 
     def create(self, validated_data):
         logger.debug("Creating tip. Validated data: %s", validated_data)
-        
+
         def get_related(model, name):
             try:
                 data = validated_data.pop(name)
@@ -98,7 +116,7 @@ class TipSerializer(serializers.ModelSerializer):
         cities = get_related(City, "cities")
         regions = get_related(Region, "regions")
         countries = get_related(Country, "countries")
-        
+
         tipper_username = None
         request = self.context.get("request")
         if request and hasattr(request, "user"):
@@ -109,7 +127,7 @@ class TipSerializer(serializers.ModelSerializer):
         tip = Tip.objects.create(tipper=tipper,
                                  score=0.0,
                                  **validated_data)
-        
+
         tip.cities.set(cities)
         tip.regions.set(regions)
         tip.countries.set(countries)

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from cities.models import Country, Region, City
+from cities.models import Country, Region, Subregion, City
+
 
 class Tip(models.Model):
     title = models.CharField(max_length=100)
@@ -15,6 +16,7 @@ class Tip(models.Model):
 
     cities = models.ManyToManyField(City, blank=True)
     regions = models.ManyToManyField(Region, blank=True)
+    subregions = models.ManyToManyField(Subregion, blank=True)
     countries = models.ManyToManyField(Country, blank=True)
 
     def __str__(self):
