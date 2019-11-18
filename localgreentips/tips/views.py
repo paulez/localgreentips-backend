@@ -23,13 +23,14 @@ class TipViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         longitude = self.request.query_params.get('longitude', None)
-        latitude= self.request.query_params.get('latitude', None)
+        latitude = self.request.query_params.get('latitude', None)
 
         global_tips = Tip.objects.filter(
             Q(cities=None) &
+            Q(subregions=None) &
             Q(regions=None) &
             Q(countries=None)
-        )
+        ).distinct()
 
         if not (longitude and latitude):
             queryset = global_tips
@@ -42,40 +43,63 @@ class TipViewSet(viewsets.ModelViewSet):
 
             close_cities = close_cities.order_by('distance')[:10]
             closest_city = close_cities.first()
+            close_cities = close_cities[1:]
             logger.debug("Looking tips in nearby cities %s", close_cities)
             logger.debug("Closest city is %s", closest_city)
-            close_cities_filter = Q()
-            for city in close_cities:
-                close_cities_filter |= Q(cities=city)
+
             local_tips = Tip.objects.filter(
-                close_cities_filter |
+                Q(cities=closest_city) |
+                Q(cities__in=close_cities) |
                 Q(subregions=closest_city.subregion) |
                 Q(regions=closest_city.region) |
                 Q(countries=closest_city.region.country)
-            )
+            ).distinct()
 
-            queryset = local_tips | global_tips
+            queryset = (local_tips | global_tips).distinct()
 
         if closest_city:
             queryset = queryset.annotate(
-                boost_score=Case(
+                closest_city_score=Case(
                     When(cities=closest_city,
-                         then=(F('score') + 1) * 1000),
-                    When(close_cities_filter,
-                         then=(F('score') + 1) * 500),
-                    When(subregions=closest_city.subregion,
                          then=(F('score') + 1) * 200),
-                    When(regions=closest_city.region,
+                    default=0,
+                    output_field=IntegerField()),
+
+                close_cities_score=Case(
+                    When(cities__in=close_cities,
                          then=(F('score') + 1) * 100),
+                    default=0,
+                    output_field=IntegerField()),
+
+                close_subregions_score=Case(
+                    When(subregions=closest_city.subregion,
+                         then=(F('score') + 1) * 50),
+                    default=0,
+                    output_field=IntegerField()),
+
+                close_regions_score=Case(
+                    When(regions=closest_city.region,
+                         then=(F('score') + 1) * 20),
+                    default=0,
+                    output_field=IntegerField()),
+
+                close_countries_score=Case(
                     When(countries=closest_city.region.country,
                          then=(F('score') + 1) * 10),
-                    default=F('score'),
-                    output_field=IntegerField()))
+                    default=0,
+                    output_field=IntegerField()),
 
-            return queryset.order_by('-boost_score').prefetch_related(
-                'cities', 'subregions', 'regions', 'countries')
+                boost_score=(F('score') + F('closest_city_score') +
+                             F('close_cities_score') +
+                             F('close_subregions_score') +
+                             F('close_regions_score') +
+                             F('close_countries_score'))
+                )
+
+            return queryset.order_by('-boost_score', 'id').prefetch_related(
+                'cities', 'subregions', 'regions', 'countries').distinct()
         else:
-            return queryset.order_by('-score')
+            return queryset.order_by('-score').distinct()
 
 
 class CityViewSet(viewsets.ModelViewSet):
