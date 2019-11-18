@@ -1,6 +1,6 @@
 from django.contrib.gis.db.models.functions import Distance
 from django.db.models import IntegerField, Case, F, Value, When, Q
-from django.contrib.gis.geos import Point 
+from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from cities.models import City
 from rest_framework import permissions, viewsets
@@ -48,9 +48,10 @@ class TipViewSet(viewsets.ModelViewSet):
             for city in close_cities:
                 close_cities_filter |= Q(cities=city)
             local_tips = Tip.objects.filter(
-                    close_cities_filter |
-                    Q(regions=closest_city.region) |
-                    Q(countries=closest_city.region.country)
+                close_cities_filter |
+                Q(subregions=closest_city.subregion) |
+                Q(regions=closest_city.region) |
+                Q(countries=closest_city.region.country)
             )
 
             queryset = local_tips | global_tips
@@ -58,14 +59,21 @@ class TipViewSet(viewsets.ModelViewSet):
         if closest_city:
             queryset = queryset.annotate(
                 boost_score=Case(
-                    When(cities=closest_city, then=F('score') * 1000),
-                    When(close_cities_filter, then=F('score') * 200),
-                    When(regions=closest_city.region, then=F('score') * 100),
-                    When(countries=closest_city.region.country, then=F('score') * 10),
+                    When(cities=closest_city,
+                         then=(F('score') + 1) * 1000),
+                    When(close_cities_filter,
+                         then=(F('score') + 1) * 500),
+                    When(subregions=closest_city.subregion,
+                         then=(F('score') + 1) * 200),
+                    When(regions=closest_city.region,
+                         then=(F('score') + 1) * 100),
+                    When(countries=closest_city.region.country,
+                         then=(F('score') + 1) * 10),
                     default=F('score'),
                     output_field=IntegerField()))
 
-            return queryset.order_by('-boost_score').prefetch_related('cities', 'regions', 'countries')
+            return queryset.order_by('-boost_score').prefetch_related(
+                'cities', 'subregions', 'regions', 'countries')
         else:
             return queryset.order_by('-score')
 
@@ -76,7 +84,7 @@ class CityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         longitude = self.request.query_params.get('longitude', None)
-        latitude= self.request.query_params.get('latitude', None)
+        latitude = self.request.query_params.get('latitude', None)
         cities = City.objects.all()
         if longitude and latitude:
             location = Point(float(longitude), float(latitude))
@@ -85,4 +93,3 @@ class CityViewSet(viewsets.ModelViewSet):
                             distance=Distance('location', location))
             cities = cities.order_by('distance')
         return cities
-

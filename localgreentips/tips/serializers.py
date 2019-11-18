@@ -91,11 +91,13 @@ class TipSerializer(serializers.ModelSerializer):
     countries = CountrySerializer(many=True, required=False)
     tipper = UserSerializer(required=False, read_only=True)
     score = serializers.FloatField(required=False, read_only=True)
+    boost_score = serializers.FloatField(required=False, read_only=True)
 
     class Meta:
         model = Tip
         fields = ('id', 'title', 'tipper', 'text',
-                  'score', 'cities', 'regions', 'subregions', 'countries')
+                  'score', 'boost_score', 'cities',
+                  'regions', 'subregions', 'countries')
 
     def create(self, validated_data):
         logger.debug("Creating tip. Validated data: %s", validated_data)
@@ -116,6 +118,7 @@ class TipSerializer(serializers.ModelSerializer):
             return related
 
         cities = get_related(City, "cities")
+        subregions = get_related(Subregion, "subregions")
         regions = get_related(Region, "regions")
         countries = get_related(Country, "countries")
 
@@ -131,6 +134,7 @@ class TipSerializer(serializers.ModelSerializer):
                                  **validated_data)
 
         tip.cities.set(cities)
+        tip.subregions.set(subregions)
         tip.regions.set(regions)
         tip.countries.set(countries)
 
