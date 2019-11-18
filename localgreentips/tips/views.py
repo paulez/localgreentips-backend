@@ -87,8 +87,9 @@ class TipViewSet(viewsets.ModelViewSet):
                     When(countries=closest_city.region.country,
                          then=(F('score') + 1) * 10),
                     default=0,
-                    output_field=IntegerField()),
+                    output_field=IntegerField()))
 
+            queryset = queryset.annotate(
                 boost_score=(F('score') + F('closest_city_score') +
                              F('close_cities_score') +
                              F('close_subregions_score') +
