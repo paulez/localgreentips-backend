@@ -316,7 +316,7 @@ class PermissionTests(APITestCase):
         }
         tip_url = get_tip_put_url(tip_id)
         response = self.client.put(tip_url, tip_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         self.user2.logout(self.client)
         self.user1.login(self.client)

@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 import logging
 
 from .models import Tip
+from .permissions import IsOwnerOrReadOnly
 from .serializers import TipSerializer
 from .serializers import CityNestedSerializer
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 class TipViewSet(viewsets.ModelViewSet):
     queryset = Tip.objects.all().order_by('-score')
     serializer_class = TipSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
     def get_queryset(self):
         longitude = self.request.query_params.get('longitude', None)
