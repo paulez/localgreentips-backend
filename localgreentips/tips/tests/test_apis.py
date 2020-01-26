@@ -13,26 +13,66 @@ logger = logging.getLogger(__name__)
 
 register_url = "/auth/users/"
 login_url = "/auth/token/login/"
+logout_url = "/auth/token/logout/"
 tips_url = "/tips/"
 cities_url = "/cities/"
+
+def get_tip_put_url(tip_id):
+    return urllib.parse.urljoin(tips_url, str(tip_id), "/") + "/"
+
+class TestUser:
+    """Defines auth information for a user.
+    """
+
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password = password
+
+    def register(self, client):
+        data = {
+            "username": self.username,
+            "email": self.email,
+            "password": self.password
+        }
+        return client.post(register_url, data, format="json")
+
+    def login(self, client):
+        data = {
+            "username": self.username,
+            "password": self.password
+        }
+        response = client.post(login_url, data, format="json")
+        logger.debug("Login response: %s", response)
+        token = response.data["auth_token"]
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token)
+        return response
+
+    def logout(self, client):
+        response = client.post(logout_url)
+        client.credentials()
+        return response
 
 class AuthTests(APITestCase):
 
     def test_register_and_login(self):
-        data = {
-            "username": "titi",
-            "email": "titi@test.com",
-            "password": "pouetpouet"
-        }
-        response = self.client.post(register_url, data, format="json")
+        user = TestUser("titi",
+                        "titi@test.com",
+                        "pouetpouet")
+        response = user.register(self.client)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        data = {
-            "username": "titi",
-            "password": "pouetpouet"
-        }
-        response = self.client.post(login_url, data, format="json")
+        response = user.login(self.client)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_logout(self):
+        user = TestUser("toto",
+                        "toto@test.fr",
+                        "weshwesh")
+        user.register(self.client)
+        user.login(self.client)
+        response = user.logout(self.client)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class TipTests(APITestCase):
@@ -86,6 +126,14 @@ class TipAuthenticatedTests(APITestCase):
         response = self.client.get(tips_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["results"]), 0)
+
+    def test_create_tip_no_location(self):
+        tip_data = {
+            "title": "test no location",
+            "text": "testing with no location"
+        }
+        response = self.client.post(tips_url, tip_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_local_tip(self):
         pos = Point(42, 127)
@@ -227,7 +275,7 @@ class TipAuthenticatedTests(APITestCase):
         updated_text = "Updated text"
         tip["text"] = updated_text
 
-        tip_url = urllib.parse.urljoin(tips_url, str(tip_id), "/") + "/"
+        tip_url = get_tip_put_url(tip_id)
         logger.debug("put tip url: %s", tip_url)
         response = self.client.put(tip_url, tip, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -238,3 +286,45 @@ class TipAuthenticatedTests(APITestCase):
         response = self.client.get(tip_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["text"], updated_text)
+
+
+class PermissionTests(APITestCase):
+    """Validate permissions.
+    """
+
+    def setUp(self):
+        self.user1 = TestUser("toto", "toto@test.com", "weshwesh")
+        self.user2 = TestUser("titi", "titi@test.com", "pouetpouet")
+        self.user1.register(self.client)
+        self.user2.register(self.client)
+
+    def test_tip_update(self):
+        self.user1.login(self.client)
+        tip_data = {
+            "title": "test auth",
+            "text": "testing auth"
+        }
+        response = self.client.post(tips_url, tip_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        tip_id = response.data["id"]
+
+        self.user1.logout(self.client)
+        self.user2.login(self.client)
+        tip_data = {
+            "title": "test update with other user",
+            "text": "this should fail"
+        }
+        tip_url = get_tip_put_url(tip_id)
+        response = self.client.put(tip_url, tip_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.user2.logout(self.client)
+        self.user1.login(self.client)
+        tip_data = {
+            "title": "test update with correct user",
+            "text": "this should succeed"
+        }
+        tip_url = get_tip_put_url(tip_id)
+        response = self.client.put(tip_url, tip_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
