@@ -83,6 +83,15 @@ class UserSerializer(serializers.ModelSerializer):
             }
         }
 
+class LocationData:
+    """Data container for location data.
+    """
+    def __init__(self, cities, subregions, regions, countries):
+        self.cities = cities
+        self.subregions = subregions
+        self.regions = regions
+        self.countries = countries
+
 class TipSerializer(serializers.ModelSerializer):
 
     cities = CitySerializer(many=True, required=False)
@@ -99,9 +108,11 @@ class TipSerializer(serializers.ModelSerializer):
                   'score', 'boost_score', 'cities',
                   'regions', 'subregions', 'countries')
 
-    def create(self, validated_data):
-        logger.debug("Creating tip. Validated data: %s", validated_data)
 
+
+    def _update_tip_data(self, validated_data):
+        """From validated data, update a tip object with location information.
+        """
         def get_related(model, name):
             try:
                 data = validated_data.pop(name)
@@ -122,20 +133,40 @@ class TipSerializer(serializers.ModelSerializer):
         regions = get_related(Region, "regions")
         countries = get_related(Country, "countries")
 
+        return LocationData(cities, subregions, regions, countries)
+
+    def _get_request_tipper(self):
         tipper_username = None
         request = self.context.get("request")
         if request and hasattr(request, "user"):
             tipper_username = request.user
         logger.debug("Retrieving tipper: %s", tipper_username)
         tipper = User.objects.get(username=tipper_username)
+        return tipper
+
+
+    def create(self, validated_data):
+        logger.debug("Creating tip. Validated data: %s", validated_data)
+
+
+        tipper = self._get_request_tipper()
+        location_data = self._update_tip_data(validated_data)
 
         tip = Tip.objects.create(tipper=tipper,
                                  score=0.0,
                                  **validated_data)
 
-        tip.cities.set(cities)
-        tip.subregions.set(subregions)
-        tip.regions.set(regions)
-        tip.countries.set(countries)
+        tip.cities.set(location_data.cities)
+        tip.subregions.set(location_data.subregions)
+        tip.regions.set(location_data.regions)
+        tip.countries.set(location_data.countries)
+
+        return tip
+
+    def update(self, tip, validated_data):
+        logger.debug("Updating tip. Validated data: %s", validated_data)
+
+        data = self._update_tip_data(validated_data)
+        tip.save()
 
         return tip

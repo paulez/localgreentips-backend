@@ -228,6 +228,6 @@ class TipAuthenticatedTests(APITestCase):
         tip_url = urllib.parse.urljoin(tips_url, str(tip_id), "/") + "/"
         logger.debug("put tip url: %s", tip_url)
         response = self.client.put(tip_url, tip, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_tip_id = response.data["id"]
         self.assertEqual(tip_id, updated_tip_id)
