@@ -223,7 +223,9 @@ class TipAuthenticatedTests(APITestCase):
         self.assertTrue(response.data["results"])
 
         tip = response.data["results"][0]
-        tip["text"] = "Updated text"
+
+        updated_text = "Updated text"
+        tip["text"] = updated_text
 
         tip_url = urllib.parse.urljoin(tips_url, str(tip_id), "/") + "/"
         logger.debug("put tip url: %s", tip_url)
@@ -231,3 +233,8 @@ class TipAuthenticatedTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_tip_id = response.data["id"]
         self.assertEqual(tip_id, updated_tip_id)
+        self.assertEqual(response.data["text"], updated_text)
+
+        response = self.client.get(tip_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["text"], updated_text)

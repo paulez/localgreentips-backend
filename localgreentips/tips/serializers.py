@@ -144,6 +144,11 @@ class TipSerializer(serializers.ModelSerializer):
         tipper = User.objects.get(username=tipper_username)
         return tipper
 
+    def _update_tip_from_location_data(self, tip, location_data):
+        tip.cities.set(location_data.cities)
+        tip.subregions.set(location_data.subregions)
+        tip.regions.set(location_data.regions)
+        tip.countries.set(location_data.countries)
 
     def create(self, validated_data):
         logger.debug("Creating tip. Validated data: %s", validated_data)
@@ -151,22 +156,20 @@ class TipSerializer(serializers.ModelSerializer):
 
         tipper = self._get_request_tipper()
         location_data = self._update_tip_data(validated_data)
-
         tip = Tip.objects.create(tipper=tipper,
                                  score=0.0,
                                  **validated_data)
-
-        tip.cities.set(location_data.cities)
-        tip.subregions.set(location_data.subregions)
-        tip.regions.set(location_data.regions)
-        tip.countries.set(location_data.countries)
+        self._update_tip_from_location_data(tip, location_data)
 
         return tip
 
     def update(self, tip, validated_data):
         logger.debug("Updating tip. Validated data: %s", validated_data)
 
-        data = self._update_tip_data(validated_data)
+        location_data = self._update_tip_data(validated_data)
+        tip.title = validated_data["title"]
+        tip.text = validated_data["text"]
+        self._update_tip_from_location_data(tip, location_data)
         tip.save()
 
         return tip
