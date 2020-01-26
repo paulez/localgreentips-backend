@@ -1,8 +1,11 @@
+import logging
+import urllib.parse
+
 from django.contrib.gis.geos import Point
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import logging
+
 
 from cities.models import Country, Region, City
 
@@ -199,3 +202,32 @@ class TipAuthenticatedTests(APITestCase):
         test_tip = response.data["results"][0]
         logger.debug("Tip: %s", test_tip)
         self.assertEqual(test_tip["title"], "test local")
+
+
+    def test_update_tip(self):
+        pos = Point(42, 127)
+        data = {
+            "latitude": pos.y,
+            "longitude": pos.x
+        }
+        tip_data = {
+            "title": "test update",
+            "text": "text before update",
+        }
+        response = self.client.post(tips_url, tip_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        tip_id = response.data["id"]
+
+        response = self.client.get(tips_url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["results"])
+
+        tip = response.data["results"][0]
+        tip["text"] = "Updated text"
+
+        tip_url = urllib.parse.urljoin(tips_url, str(tip_id), "/") + "/"
+        logger.debug("put tip url: %s", tip_url)
+        response = self.client.put(tip_url, tip, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        updated_tip_id = response.data["id"]
+        self.assertEqual(tip_id, updated_tip_id)
